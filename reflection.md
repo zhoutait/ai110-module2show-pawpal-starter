@@ -138,6 +138,9 @@ I would add the ability to edit or delete individual tasks in the Streamlit UI (
 - What is one important thing you learned about designing systems or working with AI on this project?
 
 Designing the system on paper first — even a rough UML — saved significant time during implementation. The biggest wins came not from getting the diagram perfect, but from forcing myself to decide which class owns which data before writing any code. When I skipped that step mentally, I ended up with tangled logic that had to be refactored.
+
+---
+
 ## 6. AI Strategy Reflection
 
 **a. Effective Copilot Features**
