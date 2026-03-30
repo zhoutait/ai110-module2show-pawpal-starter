@@ -138,3 +138,16 @@ I would add the ability to edit or delete individual tasks in the Streamlit UI (
 - What is one important thing you learned about designing systems or working with AI on this project?
 
 Designing the system on paper first — even a rough UML — saved significant time during implementation. The biggest wins came not from getting the diagram perfect, but from forcing myself to decide which class owns which data before writing any code. When I skipped that step mentally, I ended up with tangled logic that had to be refactored.
+## 6. AI Strategy Reflection
+
+**a. Effective Copilot Features**
+The most effective Copilot features for building the scheduler were Inline Chat and the Generate Tests smart action. Inline Chat allowed me to quickly ask for specific algorithmic implementations, such as how to use a lambda function to sort tasks by time, without losing context of the file I was working in. The Generate Tests feature significantly sped up the creation of boilerplate test code, allowing me to focus on defining the edge cases rather than writing repetitive setup code.
+
+**b. Rejected AI Suggestion**
+During the implementation of the conflict detection algorithm, Copilot suggested a complex interval tree approach to handle overlapping times. I rejected this suggestion because it was overly complex for the scale of a daily pet schedule (which typically has fewer than 20 tasks). Instead, I opted for a simpler nested loop approach that checks for overlaps directly. This kept the system design clean, readable, and easy to maintain, which is more important than micro-optimizations for this specific use case.
+
+**c. Organizing with Separate Chat Sessions**
+Using separate chat sessions for different phases (e.g., one for core implementation, one for algorithmic logic, and one for testing) was crucial for staying organized. It prevented the AI's context window from becoming cluttered with irrelevant code or previous discussions. For example, when I started the testing phase, starting a new session ensured that Copilot focused entirely on generating test cases based on the final implementation, rather than getting confused by earlier drafts of the code.
+
+**d. Lead Architect Summary**
+Collaborating with powerful AI tools taught me that the role of a developer is shifting from "code writer" to "lead architect." The AI is excellent at generating syntax, suggesting algorithms, and writing boilerplate, but it lacks the domain knowledge and high-level vision to make architectural tradeoffs. As the lead architect, my primary responsibility is to define clear constraints, evaluate the AI's suggestions against the project's goals, and ensure the final system remains cohesive and maintainable. The AI is a powerful assistant, but human judgment is still required to build a truly robust system.

@@ -262,7 +262,7 @@ with tab_schedule:
             schedule  = scheduler.generate_schedule()
 
             # ── Results ──────────────────────────────────────────────
-            total_used = sum(st.task.duration_minutes for st in schedule)
+            total_used = sum(item.task.duration_minutes for item in schedule)
 
             st.success(
                 f"Schedule generated: **{len(schedule)} task(s)** | "
@@ -272,12 +272,29 @@ with tab_schedule:
             if scheduler.conflicts:
                 st.error(
                     f"⚠️ {len(scheduler.conflicts)} time conflict(s) detected — "
-                    "review the table below."
+                    "review the warnings below."
                 )
+                for a, b in scheduler.conflicts:
+                    st.warning(f"**Conflict:** '{a.task.title}' ({a.start_time.strftime('%H:%M')}–{a.end_time.strftime('%H:%M')}) overlaps with '{b.task.title}' ({b.start_time.strftime('%H:%M')}–{b.end_time.strftime('%H:%M')})")
+
+            st.divider()
+            st.subheader("Schedule View Options")
+            col_sort, col_filter = st.columns(2)
+            with col_sort:
+                sort_time = st.checkbox("Sort chronologically", value=True)
+            with col_filter:
+                filter_pet = st.selectbox("Filter by pet", ["All"] + list(pet_map.keys()))
+
+            display_schedule = schedule
+            if sort_time:
+                display_schedule = scheduler.sort_by_time()
+            
+            if filter_pet != "All":
+                display_schedule = [item for item in display_schedule if item.pet_name == filter_pet]
 
             # Timeline table
             rows = []
-            for st_item in schedule:
+            for st_item in display_schedule:
                 rows.append({
                     "Time":     f"{st_item.start_time.strftime('%H:%M')} – {st_item.end_time.strftime('%H:%M')}",
                     "Pet":      st_item.pet_name,

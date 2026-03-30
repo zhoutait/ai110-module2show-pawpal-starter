@@ -250,3 +250,94 @@ class TestScheduledTaskOverlap:
         a = self._make_st(8, 12)
         b = self._make_st(9, 11)
         assert a.overlaps(b)
+
+# ── Additional Phase 5 Tests ──────────────────────────────────────────────────
+
+class TestAlgorithmicFeatures:
+    def test_sort_by_time(self):
+        owner = Owner("J", available_minutes=120, wake_time=datetime.time(8, 0))
+        pet = Pet("P")
+        # High priority with late preferred time
+        pet.add_task(Task("Late High", priority=Priority.HIGH, preferred_time=datetime.time(10, 0), duration_minutes=30))
+        # Low priority with early preferred time
+        pet.add_task(Task("Early Low", priority=Priority.LOW, preferred_time=datetime.time(8, 0), duration_minutes=30))
+        owner.add_pet(pet)
+
+        s = Scheduler(owner)
+        s.generate_schedule()
+        
+        # Default schedule might not be strictly chronological depending on packing
+        sorted_schedule = s.sort_by_time()
+        assert sorted_schedule[0].start_time <= sorted_schedule[1].start_time
+
+    def test_recurrence_logic(self):
+        pet = Pet("P")
+        task = Task("Daily Meds", is_recurring=True, recurrence_days=1)
+        pet.add_task(task)
+        
+        assert len(pet.tasks) == 1
+        pet.mark_task_complete("Daily Meds")
+        
+        # Should now have 2 tasks: 1 completed, 1 new pending
+        assert len(pet.tasks) == 2
+        completed_tasks = [t for t in pet.tasks if t.completed]
+        pending_tasks = [t for t in pet.tasks if not t.completed]
+        
+        assert len(completed_tasks) == 1
+        assert len(pending_tasks) == 1
+        assert pending_tasks[0].title == "Daily Meds"
+        assert pending_tasks[0].due_date == completed_tasks[0].due_date + datetime.timedelta(days=1)
+
+    def test_conflict_detection(self):
+        owner = Owner("J", available_minutes=120, wake_time=datetime.time(8, 0))
+        s = Scheduler(owner)
+        
+        # Manually add overlapping tasks to the schedule to test detection
+        t1 = Task("Task A")
+        st1 = ScheduledTask(t1, "P", datetime.time(9, 0), datetime.time(9, 30))
+        t2 = Task("Task B")
+        st2 = ScheduledTask(t2, "P", datetime.time(9, 15), datetime.time(9, 45))
+        
+        s.schedule.extend([st1, st2])
+        conflicts = s.detect_conflicts()
+        
+        assert len(conflicts) == 1
+        assert conflicts[0][0].task.title == "Task A"
+        assert conflicts[0][1].task.title == "Task B"
+
+    def test_filter_by_pet(self):
+        owner = Owner("J", available_minutes=120, wake_time=datetime.time(8, 0))
+        pet1 = Pet("Dog")
+        pet1.add_task(Task("Walk", duration_minutes=30))
+        pet2 = Pet("Cat")
+        pet2.add_task(Task("Feed", duration_minutes=10))
+        owner.add_pet(pet1)
+        owner.add_pet(pet2)
+
+        s = Scheduler(owner)
+        s.generate_schedule()
+        
+        dog_tasks = s.filter_by_pet("Dog")
+        assert len(dog_tasks) == 1
+        assert dog_tasks[0].task.title == "Walk"
+
+    def test_filter_by_status(self):
+        owner = Owner("J", available_minutes=120, wake_time=datetime.time(8, 0))
+        pet = Pet("P")
+        t1 = Task("Done Task", duration_minutes=10)
+        t1.completed = True
+        t2 = Task("Pending Task", duration_minutes=10)
+        pet.add_task(t1)
+        pet.add_task(t2)
+        owner.add_pet(pet)
+
+        s = Scheduler(owner)
+        s.generate_schedule()
+        
+        completed_tasks = s.filter_by_status(True)
+        pending_tasks = s.filter_by_status(False)
+        
+        assert len(completed_tasks) == 1
+        assert completed_tasks[0].task.title == "Done Task"
+        assert len(pending_tasks) == 1
+        assert pending_tasks[0].task.title == "Pending Task"
